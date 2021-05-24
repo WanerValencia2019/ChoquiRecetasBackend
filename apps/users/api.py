@@ -5,14 +5,19 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import login, logout
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.generics import GenericAPIView,UpdateAPIView
 #from django.views.decorators.csrf import csrf_protect
 from django.middleware.csrf import get_token
 #from django.contrib.auth import login
+from .models import CustomModelUser, CodeVerification
 
+from .mail import Mail
 
+User = CustomModelUser
+
+#REGISTER
 class CreateUserVIEW(GenericAPIView):
     serializer_class=CreateUserSerializer
     def post(self,request):
@@ -22,11 +27,25 @@ class CreateUserVIEW(GenericAPIView):
         serializer.save()
         data=serializer.data
         user=User.objects.get(**data)
-        token=Token.objects.create(user=user)
-        print(dir(token))
-        login(self.request,user)
-        return Response({"User":UserSerializer(user,context=self.get_serializer_context()).data,"Token":token.key},status.HTTP_200_OK)
+        codeVerification = CodeVerification()
+        codeVerification.user = user
+        codeVerification.save() 
 
+        Mail.send_code_verification(user, codeVerification)
+        return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
+
+# CODE VERIFICATION
+class CodeVerificationView(GenericAPIView):
+    serializer_class = CodeVerificationSerializer
+
+    def post(self,request):
+        #print(request)
+        serializer=self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data=serializer.data
+        print(data)
+        return Response({"message":"Cuenta verificada con éxito"},status.HTTP_200_OK)
 
 #LOGIN
 class LoginView(GenericAPIView):
@@ -34,18 +53,14 @@ class LoginView(GenericAPIView):
     def post(self,request):
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        #print("holaaaaaaaaaaaaaaa")
         user=serializer.validated_data
         token=Token.objects.get_or_create(user=user)
         key=token[0].key
-        #print(token[0].user)
-        #print(dir(token))
         login(self.request,user)
-        #print(dir(key))
-        #print(userSerializado)
         self.headers.setdefault("X-CSRFToken",get_token(request))
-        print(UserSerializer(user,context=self.get_serializer_context()))
-        return Response({"User":serializer.data,"Token":key},status.HTTP_200_OK)
+
+        userSerialized = UserSerializer(user,context=self.get_serializer_context()).data
+        return Response({"user":userSerialized,"token":key},status.HTTP_200_OK)
 
 class LogoutView(APIView):
     permission_classes=(IsAuthenticated,)
