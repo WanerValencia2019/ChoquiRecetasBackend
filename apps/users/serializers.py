@@ -1,22 +1,28 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
-
 from rest_framework.authtoken.models import Token
+from django.db.models import Q
 
-User = get_user_model()
+from .models import CustomModelUser, CodeVerification
+
+User = CustomModelUser
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=User
+        fields=("id","username","email","first_name","last_name")
 
 class CreateUserSerializer(serializers.Serializer):
     model=User
     id=serializers.ReadOnlyField()
-    #print(dir(serializers))
     username=serializers.CharField(required=True)
     last_name=serializers.CharField(required=True)
     first_name=serializers.CharField(required=True)
     email=serializers.EmailField()
     password=serializers.CharField(required=True)
+    password_confirm=serializers.CharField(required=True)
     def create(self,validated_data):
-        #print(data.get('username'))
         user=User()
         user.username=validated_data.get('username')
         user.first_name=validated_data.get('first_name')
@@ -25,48 +31,55 @@ class CreateUserSerializer(serializers.Serializer):
         user.is_active=False
         user.set_password(validated_data.get('password'))
         user.save()
-        print(user)
         return user
 
     def validate(self,validated_data):
-        #print(validated_data.get('username'))
-        users=User.objects.filter(username=validated_data.get('username'),email=validated_data.get('email'))
+        if validated_data['password'] != validated_data['password_confirm']:
+            raise serializers.ValidationError({"message":"Las contraseñas no coinciden"})
+
+        users=User.objects.filter(Q(username=validated_data.get('username')) | Q(email=validated_data.get('email')))
+
         if len(users) != 0:
             raise serializers.ValidationError({"message":"El nombre de usuario Y/O email ya se encuentra registrado"})
+
         return validated_data
 
+# CODE VERIFICATION
+class CodeVerificationSerializer(serializers.Serializer):
+    email=serializers.EmailField(required=True)
+    code=serializers.CharField(required=True, max_length=4)
+
+    def validate(self, validated_data):
+        code = CodeVerification.objects.verify_code(validated_data['email'],validated_data['code'])
+
+        if code is None:
+            raise serializers.ValidationError({"message":"El código verificación es inválido"})
+        
+        code.used = True
+        code.save()
+
+        user = User.objects.get(email = validated_data['email'])
+        user.is_active = True
+        user.save()
+
+        return validated_data
 
 class LoginSerializer(serializers.Serializer):
     username=serializers.CharField(required=True)
     password=serializers.CharField(required=True)
-    """def create(self,validated_data):
-        print(validated_data)
-        user=authenticate(username=validated_data.get('username'),password=validated_data.get('password'))
-        print(user)
-        #user=User.objects.get(username=validated_data.get('username'))
-        print(user)
-        token=Token.objects.get_or_create(user=user)
-        print(token)
-        #userAUTH=authenticate()
-        #token=Token.objects.filter(user=user)
-        token=user
-        if token:
-            print("Hay token")
-        else:
-             print("NO hay token")
-        return validated_data"""
 
     def validate(self,data):
         user=authenticate(username=data.get('username'),password=data.get('password'))
         if user and user.is_active:
             return user
-        raise serializers.ValidationError({"message":"Usuario o contraseña incorrectos"})
+        elif user and not user.is_active:
+            raise serializers.ValidationError({"message":"Esta cuenta está inactiva, activa tu cuenta"})
+        else:
+            raise serializers.ValidationError({"message":"Credenciales incorrectos"})
+
+        return user
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=User
-        fields=("id","username","email","first_name","last_name")
 
 
 
