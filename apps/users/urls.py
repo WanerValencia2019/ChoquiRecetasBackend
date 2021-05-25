@@ -11,6 +11,8 @@ from .api import *
 urlpatterns=[
 	path(r'register',CreateUserVIEW.as_view(),name="register"),
 	path(r'codeVerification',CodeVerificationView.as_view(),name="codeVerification"),
+	path(r'reset_password',ResetPasswordSendCodeView.as_view(),name="reset_password_sendcode"),
+	path(r'reset_password/confirm',ResetPasswordVerifyCodeView.as_view(),name="reset_password_confirm"),
 	path(r'login',LoginView.as_view(),name="login"),
     path(r'logout',LogoutView.as_view(),name="logout"),
     path(r'changePassword',ChangePasswordView.as_view(),name="change-password"),

@@ -15,4 +15,19 @@ class CodeVerificationManager(Manager):
 
 		return None
 
+	def create_code_verification(self, User, email):
+		user = User.objects.filter(email=email).first()
+
+		if user != None:
+			try:
+				code = self.get(user=user).delete()
+				codeVerification = self.create(user=user)
+				return codeVerification
+			except:
+				codeVerification = self.create(user=user)
+				return codeVerification
+
+		return None
+
+
 

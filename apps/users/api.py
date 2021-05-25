@@ -12,6 +12,7 @@ from rest_framework.generics import GenericAPIView,UpdateAPIView
 from django.middleware.csrf import get_token
 #from django.contrib.auth import login
 from .models import CustomModelUser, CodeVerification
+from threading import Thread
 
 from .mail import Mail
 
@@ -27,11 +28,13 @@ class CreateUserVIEW(GenericAPIView):
         serializer.save()
         data=serializer.data
         user=User.objects.get(**data)
-        codeVerification = CodeVerification()
-        codeVerification.user = user
-        codeVerification.save() 
+        
+        codeVerification = CodeVerification.objects.create_code_verification(User, user['email'])
 
-        Mail.send_code_verification(user, codeVerification)
+        thread = Thread(target=Mail.send_code_verification, args=(
+            user, codeVerification
+            ))
+        thread.start()
         return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
 
 # CODE VERIFICATION
@@ -71,6 +74,33 @@ class LogoutView(APIView):
         logout(request)
         user.auth_token.delete()
         return Response({"User":"Sesión terminada"},status.HTTP_200_OK)
+
+
+class ResetPasswordSendCodeView(GenericAPIView):
+    serializer_class = ResetPasswordSendCodeSerializer
+    def post(self,request):
+        serializer=self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data=serializer.data
+        user = User.objects.filter(email=data['email']).first()
+        codeVerification = CodeVerification.objects.filter(user=user).first()
+        
+        thread = Thread(target=Mail.send_code_verification, args=(
+            user,codeVerification
+            ))
+        thread.start()
+        return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
+
+
+class ResetPasswordVerifyCodeView(GenericAPIView):
+    serializer_class = ResetPasswordVerifyCodeSerializer
+
+    def post(self,request):
+        serializer=self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response({"message":"We have sent an email with your new password"},status.HTTP_200_OK)
+
 
 #CAMBIANDO LA CONTRASEÑA DEL USUARIO
 class ChangePasswordView(UpdateAPIView):

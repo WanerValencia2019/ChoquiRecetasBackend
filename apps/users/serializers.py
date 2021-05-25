@@ -2,8 +2,13 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.db.models import Q
+from threading import Thread
 
 from .models import CustomModelUser, CodeVerification
+from .utils import get_random_string
+
+from .mail import Mail
+
 
 User = CustomModelUser
 
@@ -64,6 +69,7 @@ class CodeVerificationSerializer(serializers.Serializer):
 
         return validated_data
 
+#LOGIN
 class LoginSerializer(serializers.Serializer):
     username=serializers.CharField(required=True)
     password=serializers.CharField(required=True)
@@ -81,9 +87,51 @@ class LoginSerializer(serializers.Serializer):
 
 
 
+#RESET PASSWORD
+class ResetPasswordSendCodeSerializer(serializers.Serializer):
+    email=serializers.EmailField(required=True)
+
+    def validate(self, validated_data):
+        code = CodeVerification.objects.create_code_verification(User, validated_data['email'])
+
+        if code is None:
+            raise serializers.ValidationError({"message":"Este correo electrónico es inválido"})
+        
+
+        return validated_data  
 
 
-#cambiando la contraseña del usuario
+class ResetPasswordVerifyCodeSerializer(serializers.Serializer):
+    email=serializers.EmailField(required=True)
+    code=serializers.CharField(required=True, max_length=4)
+
+    def validate(self, validated_data):
+        code = CodeVerification.objects.verify_code(validated_data['email'],validated_data['code'])
+
+        if code is None:
+            raise serializers.ValidationError({"message":"El código verificación es inválido"})
+        
+        code.used = True
+        code.save()
+        new_password = get_random_string(12)
+
+        user = User.objects.get(email = validated_data['email'])
+        user.set_password(new_password)
+        user.save()
+
+        thread = Thread(target=Mail.send_reseted_password, args=(
+            user, new_password
+            ))
+        thread.start()
+        
+        return validated_data
+
+
+
+
+
+
+#cambiando la contraseña del usuario, CHANGE PASSWORD
 class ChangePasswordSerializer(serializers.Serializer):
     def validate(self,validated_data):
         #print(validated_data)

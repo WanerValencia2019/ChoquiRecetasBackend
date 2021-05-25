@@ -16,3 +16,17 @@ class Mail():
         message = EmailMultiAlternatives(subject, content,settings.EMAIL_HOST_USER, to=[user.email])
         message.content_subtype="html"
         message.send()
+
+    @staticmethod
+    def send_reseted_password(user, password):
+        subject = 'Restablecimiento de contraseña <ChoquiRecetas>'
+        template = get_template('mail_reset_password.html')
+        content = template.render({
+            'user':user,
+            'password': password
+        })
+
+        message = EmailMultiAlternatives(subject, content,settings.EMAIL_HOST_USER, to=[user.email])
+        message.content_subtype="html"
+        message.send()
+
