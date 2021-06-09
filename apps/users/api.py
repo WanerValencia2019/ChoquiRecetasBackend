@@ -99,6 +99,7 @@ class ResetPasswordVerifyCodeView(GenericAPIView):
     def post(self,request):
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        print("DATA")
         return Response({"message":"We have sent an email with your new password"},status.HTTP_200_OK)
 
 
