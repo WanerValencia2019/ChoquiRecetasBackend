@@ -19,7 +19,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields=("id","username","email","first_name","last_name")
 
 class CreateUserSerializer(serializers.Serializer):
-    model=User
     id=serializers.ReadOnlyField()
     username=serializers.CharField(required=True)
     last_name=serializers.CharField(required=True)

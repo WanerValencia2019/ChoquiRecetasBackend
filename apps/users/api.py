@@ -17,19 +17,29 @@ from threading import Thread
 from .mail import Mail
 
 User = CustomModelUser
+from django.views.decorators.csrf import csrf_exempt
+
+from rest_framework.authentication import SessionAuthentication 
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening
 
 #REGISTER
 class CreateUserVIEW(GenericAPIView):
     serializer_class=CreateUserSerializer
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+    
     def post(self,request):
         #print(request)
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        data=serializer.data
-        user=User.objects.get(**data)
+        user = serializer.save()
         
-        codeVerification = CodeVerification.objects.create_code_verification(User, user['email'])
+        print(user.email)
+
+        codeVerification = CodeVerification.objects.create_code_verification(User, user.email)
 
         thread = Thread(target=Mail.send_code_verification, args=(
             user, codeVerification
@@ -40,7 +50,8 @@ class CreateUserVIEW(GenericAPIView):
 # CODE VERIFICATION
 class CodeVerificationView(GenericAPIView):
     serializer_class = CodeVerificationSerializer
-
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+    
     def post(self,request):
         #print(request)
         serializer=self.get_serializer(data=request.data)
@@ -53,15 +64,17 @@ class CodeVerificationView(GenericAPIView):
 #LOGIN
 class LoginView(GenericAPIView):
     serializer_class=LoginSerializer
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
     def post(self,request):
+        self.headers.setdefault("X-CSRFToken",get_token(request))
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user=serializer.validated_data
         token=Token.objects.get_or_create(user=user)
         key=token[0].key
         login(self.request,user)
-        self.headers.setdefault("X-CSRFToken",get_token(request))
-
+        print(self.headers)
         userSerialized = UserSerializer(user,context=self.get_serializer_context()).data
         return Response({"user":userSerialized,"token":key},status.HTTP_200_OK)
 
@@ -78,6 +91,8 @@ class LogoutView(APIView):
 
 class ResetPasswordSendCodeView(GenericAPIView):
     serializer_class = ResetPasswordSendCodeSerializer
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
     def post(self,request):
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -95,6 +110,7 @@ class ResetPasswordSendCodeView(GenericAPIView):
 
 class ResetPasswordVerifyCodeView(GenericAPIView):
     serializer_class = ResetPasswordVerifyCodeSerializer
+    authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self,request):
         serializer=self.get_serializer(data=request.data)

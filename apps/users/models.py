@@ -21,7 +21,7 @@ class CodeVerification(models.Model):
 	user = models.OneToOneField(CustomModelUser, blank=False, null=False, on_delete=models.CASCADE)
 	code = models.CharField(verbose_name="Código",max_length=4, blank=True, null=False)
 	created = models.DateTimeField(auto_now_add=True)
-	expiration = models.DateTimeField(default=timezone.now()+timedelta(minutes=5))
+	expiration = models.DateTimeField(verbose_name="Fecha de expiración",blank=True,null=False)
 	used = models.BooleanField(default=False)
 	objects = CodeVerificationManager()
 	
@@ -37,6 +37,8 @@ def creatCodeVerification(instance,*args, **kwargs):
 	if not instance.code:
 		instance.code = code
 
+	if not instance.expiration:
+		instance.expiration = timezone.now()+timedelta(minutes=5)
 
 
 
