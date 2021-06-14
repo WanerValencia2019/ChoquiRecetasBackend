@@ -86,8 +86,8 @@ class LoginSerializer(serializers.Serializer):
 
 
 
-#RESET PASSWORD
-class ResetPasswordSendCodeSerializer(serializers.Serializer):
+#RESET PASSWORD OR ACTIVATE ACCOUNT
+class SendCodeVerificationSerializer(serializers.Serializer):
     email=serializers.EmailField(required=True)
 
     def validate(self, validated_data):
