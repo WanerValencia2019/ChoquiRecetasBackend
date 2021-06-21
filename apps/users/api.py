@@ -47,6 +47,19 @@ class CreateUserVIEW(GenericAPIView):
         thread.start()
         return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
 
+class ChangeImageProfileView(GenericAPIView):
+    serializer_class= ChangeImageProfile
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        print(user)
+
+        return Response({"message":"Image profile updated successfully"},status.HTTP_200_OK)
+
 # CODE VERIFICATION
 class CodeVerificationView(GenericAPIView):
     serializer_class = CodeVerificationSerializer
@@ -88,9 +101,28 @@ class LogoutView(APIView):
         user.auth_token.delete()
         return Response({"User":"Sesión terminada"},status.HTTP_200_OK)
 
+class SendCodeVerification(GenericAPIView):
+    serializer_class = SendCodeVerificationSerializer
+    authentication_classes = (CsrfExemptSessionAuthentication,)    
+
+    def post(self,request):
+        serializer=self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data=serializer.data
+        user = User.objects.filter(email=data['email']).first()
+        codeVerification = CodeVerification.objects.filter(user=user).first()
+        
+        thread = Thread(target=Mail.send_code_verification, args=(
+            user,codeVerification
+            ))
+        thread.start()
+        return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
+
+
 
 class ResetPasswordSendCodeView(GenericAPIView):
-    serializer_class = ResetPasswordSendCodeSerializer
+    serializer_class = SendCodeVerificationSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self,request):

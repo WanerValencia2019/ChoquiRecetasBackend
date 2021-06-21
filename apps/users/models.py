@@ -1,5 +1,5 @@
 import random
-
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
@@ -11,9 +11,17 @@ from .managers import CodeVerificationManager
 # Create your models here.
 
 
+def path_to_rename(instance, filename):
+	extension = filename.split(".")[-1]
+	name = uuid.uuid4().hex
+	return f"profiles/{name}.{extension}"
+
+
 class CustomModelUser(AbstractUser):
 	user_outstanding = models.BooleanField(default=False)
-
+	followers = models.JSONField(verbose_name='seguidores', null=True, blank=True, default={})
+	image_profile = models.ImageField(verbose_name="Imagén de perfil", upload_to=path_to_rename,null=True, blank=True)
+    
 
 
 
