@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'apps.users',
+    'apps.recipes',
     'oauth2_provider',
     'social_django',
     'rest_framework_social_oauth2',

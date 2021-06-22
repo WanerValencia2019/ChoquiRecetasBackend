@@ -18,11 +18,18 @@ def path_to_rename(instance, filename):
 
 
 class CustomModelUser(AbstractUser):
+	uuid = models.CharField(max_length=40, null=True, blank=True, )
 	user_outstanding = models.BooleanField(default=False)
-	followers = models.JSONField(verbose_name='seguidores', null=True, blank=True, default={})
+	followers = models.ManyToManyField("self", null=True, blank=True)
 	image_profile = models.ImageField(verbose_name="Imagén de perfil", upload_to=path_to_rename,null=True, blank=True)
     
+	def __str__(self):
+		return f"{self.uuid} - {self.username}"
 
+@receiver(pre_save,sender=CustomModelUser)
+def set_uuid(instance, *args, **kwargs):
+	if not instance.uuid:
+		instance.uuid = uuid.uuid4().hex
 
 
 class CodeVerification(models.Model):
