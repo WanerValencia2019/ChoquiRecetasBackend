@@ -13,10 +13,11 @@ from .mail import Mail
 User = CustomModelUser
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=User
-        fields=("id","username","email","first_name","last_name",'image_profile')
+        fields=("id","uuid","username","email","first_name","last_name",'image_profile')
 
 class CreateUserSerializer(serializers.Serializer):
     id=serializers.ReadOnlyField()

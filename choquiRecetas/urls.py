@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('rest_framework.urls')),
     path('api/v1/auth/',include('apps.users.urls'),name="auth"),
+    path('api/v1/recipes/',include('apps.recipes.urls'),name="recipes"),
     path('api/v1/social_auth/', include('rest_framework_social_oauth2.urls')),
 ]
 

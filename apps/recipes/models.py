@@ -13,6 +13,7 @@ class Step(models.Model):
 
 class Recipe(models.Model):
 	created_by = models.ForeignKey(CustomModelUser, on_delete=models.CASCADE)
+	title = models.CharField(max_length=200,null=False,default="")
 	description = models.TextField(null=False)
 	ingredients = models.JSONField(default=[])
 	steps = models.ManyToManyField(Step, related_name="recipe_steps")
@@ -20,7 +21,7 @@ class Recipe(models.Model):
 	comments = models.ManyToManyField(CustomModelUser, through="CommentsRecipe", related_name="recipe_comments")
 	created_at = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
-		return self.created_by
+		return f"{self.title} - {self.created_by.username}"
 
 
 class CommentsRecipe(models.Model):
@@ -28,6 +29,9 @@ class CommentsRecipe(models.Model):
 	recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 	comment = models.CharField(verbose_name="Comentario",max_length=300)
 	created_at = models.DateTimeField(auto_now_add=True)
+
+	def __str__(self):
+		return f"{self.user.username} - {self.recipe.title}"
 
 
 
