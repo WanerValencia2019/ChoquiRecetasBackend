@@ -35,7 +35,9 @@ class CreateUserSerializer(serializers.Serializer):
         user.last_name=validated_data.get('last_name')
         user.email=validated_data.get('email')
         user.is_active=False
-        user.image_profile = validated_data.get('image_profile')
+        #print(validated_data.get('image_profile'))
+        #print(dir(validated_data.get('image_profile')))
+        #user.image_profile = validated_data.get('image_profile')
         user.set_password(validated_data.get('password'))
         user.save()
         return user

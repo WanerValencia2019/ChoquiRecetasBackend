@@ -20,7 +20,7 @@ def path_to_rename(instance, filename):
 class CustomModelUser(AbstractUser):
 	uuid = models.CharField(max_length=40, null=True, blank=True, )
 	user_outstanding = models.BooleanField(default=False)
-	followers = models.ManyToManyField("self", null=True, blank=True)
+	followers = models.ManyToManyField("self")
 	image_profile = models.ImageField(verbose_name="Imagén de perfil", upload_to=path_to_rename,null=True, blank=True)
     
 	def __str__(self):
