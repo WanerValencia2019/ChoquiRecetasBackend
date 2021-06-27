@@ -49,7 +49,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Recipe
-		fields=['created_by','title', 'description','ingredients','steps','likes','commentsrecipe_set','created_at']
+		fields=['uuid','created_by','title', 'description','ingredients','steps','likes','commentsrecipe_set','created_at']
 
 
 
@@ -135,6 +135,51 @@ class CreateRecipeSerializer(serializers.Serializer):
 			raise serializers.ValidationError({"message":"Este usuario no existe"})
 		print(created_by, steps)
 		return data
+
+
+class LikeRecipeSerializer(serializers.Serializer):
+	user_uuid = serializers.CharField(max_length=40)
+	recipe_uuid = serializers.CharField(max_length=40)
+
+	def create(self, validated_data):
+		user_uuid = validated_data.get('user_uuid')
+		recipe_uuid = validated_data.get('recipe_uuid')
+		recipe = Recipe.objects.filter(uuid=recipe_uuid).prefetch_related("likes").first()
+		user = User.objects.filter(uuid=user_uuid).first()
+
+		#print(user)
+		#print(recipe.likes.filter(id=user.id).exists())
+
+		if recipe.likes.filter(id=user.id).exists():		
+			recipe.likes.remove(user)
+		else:
+			recipe.likes.set([user])
+
+		recipe.save()
+
+		return recipe
+
+
+	def validate(self, data):
+		user_uuid = data.get('user_uuid')
+		recipe_uuid = data.get('recipe_uuid')
+
+		recipe = Recipe.objects.filter(uuid=recipe_uuid).prefetch_related("likes").first()
+
+		if recipe is not None:
+			user = User.objects.filter(uuid=user_uuid).first()
+			if user is None:
+				raise serializers.ValidationError({"message":"Este usuario no existe"})
+		else:
+			raise serializers.ValidationError({"message":"Esta receta ha desaparecido"})
+
+
+
+		return data
+
+
+
+
 
 """
 {
