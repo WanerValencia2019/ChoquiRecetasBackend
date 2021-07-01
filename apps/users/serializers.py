@@ -13,18 +13,19 @@ from .mail import Mail
 User = CustomModelUser
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=User
-        fields=("id","username","email","first_name","last_name")
+        fields=("id","uuid","username","email","first_name","last_name",'image_profile')
 
 class CreateUserSerializer(serializers.Serializer):
-    model=User
     id=serializers.ReadOnlyField()
     username=serializers.CharField(required=True)
     last_name=serializers.CharField(required=True)
     first_name=serializers.CharField(required=True)
     email=serializers.EmailField()
+    image_profile=serializers.ImageField()
     password=serializers.CharField(required=True)
     password_confirm=serializers.CharField(required=True)
     def create(self,validated_data):
@@ -34,6 +35,9 @@ class CreateUserSerializer(serializers.Serializer):
         user.last_name=validated_data.get('last_name')
         user.email=validated_data.get('email')
         user.is_active=False
+        #print(validated_data.get('image_profile'))
+        #print(dir(validated_data.get('image_profile')))
+        #user.image_profile = validated_data.get('image_profile')
         user.set_password(validated_data.get('password'))
         user.save()
         return user
@@ -48,6 +52,29 @@ class CreateUserSerializer(serializers.Serializer):
             raise serializers.ValidationError({"message":"El nombre de usuario Y/O email ya se encuentra registrado"})
 
         return validated_data
+
+class ChangeImageProfile(serializers.Serializer):
+    user_id = serializers.IntegerField(required = True)
+    image_profile=serializers.ImageField(required = True)
+
+    def create(self, validated_data):
+        user = User.objects.filter(id=validated_data.get('user_id')).first()
+
+        user.image_profile = validated_data.get('image_profile')
+        user.save()
+
+        return user
+
+    def validate(self, data):
+        id = data.get('user_id')
+
+        user = User.objects.filter(id=id).first()
+
+        if user is None:
+            raise serializers.ValidationError({"message":"Este usuario no se encuentra registrado"})
+
+        return data
+
 
 # CODE VERIFICATION
 class CodeVerificationSerializer(serializers.Serializer):
@@ -87,8 +114,8 @@ class LoginSerializer(serializers.Serializer):
 
 
 
-#RESET PASSWORD
-class ResetPasswordSendCodeSerializer(serializers.Serializer):
+#RESET PASSWORD OR ACTIVATE ACCOUNT
+class SendCodeVerificationSerializer(serializers.Serializer):
     email=serializers.EmailField(required=True)
 
     def validate(self, validated_data):
