@@ -8,7 +8,7 @@ from .models import CustomModelUser, CodeVerification
 from .utils import get_random_string
 
 from .mail import Mail
-
+from apps.utils import get_binary_content
 
 User = CustomModelUser
 
@@ -62,22 +62,30 @@ class CreateUserSerializer(serializers.Serializer):
 
         return validated_data
 
+
+
+
+
 class ChangeImageProfile(serializers.Serializer):
-    user_id = serializers.IntegerField(required = True)
-    image_profile=serializers.ImageField(required = True)
+    user_uuid = serializers.CharField(max_length=42,required = True)
+    image_profile=serializers.CharField(required = True)
 
     def create(self, validated_data):
-        user = User.objects.filter(id=validated_data.get('user_id')).first()
-
-        user.image_profile = validated_data.get('image_profile')
+        image = get_binary_content(validated_data.get('image_profile'))
+        user = User.objects.filter(uuid=validated_data.get('user_uuid')).first()
+        user.image_profile.save("default.jpeg",image, save=False)
         user.save()
 
         return user
 
     def validate(self, data):
-        id = data.get('user_id')
+        uuid = data.get('user_uuid')
+        image = data.get('image_profile')
 
-        user = User.objects.filter(id=id).first()
+        user = User.objects.filter(uuid=uuid).first()
+
+        if len(image)%4 != 0:
+            raise serializers.ValidationError({"message":"Esta imagén no es válida"}) 
 
         if user is None:
             raise serializers.ValidationError({"message":"Este usuario no se encuentra registrado"})
