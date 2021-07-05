@@ -91,6 +91,17 @@ class LoginView(GenericAPIView):
         userSerialized = UserSerializer(user,context=self.get_serializer_context()).data
         return Response({"user":userSerialized,"token":key},status.HTTP_200_OK)
 
+class ProfileView(GenericAPIView):
+    permission_classes=(IsAuthenticated,)
+    authentication_classes=(TokenAuthentication,)
+
+    def get(self, request, format=None):
+        print(dir(request))
+        print(request)
+
+        return Response({},status.HTTP_200_OK)
+
+
 class LogoutView(APIView):
     permission_classes=(IsAuthenticated,)
     authentication_classes=(TokenAuthentication,)

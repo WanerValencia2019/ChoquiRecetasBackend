@@ -6,9 +6,14 @@ import uuid
 # Create your models here.
 
 
+def path_to_rename(instance, filename):
+	extension = filename.split(".")[-1]
+	name = uuid.uuid4().hex
+	return f"recipes/{name}.{extension}"
+
 class Step(models.Model):
 	description = models.TextField(null=False)
-	image = models.ImageField(upload_to="recipes/", null=True, blank=True)
+	image = models.ImageField(upload_to=path_to_rename, null=True, blank=True)
 
 	def __str__(self):
 		return self.description
@@ -19,6 +24,7 @@ class Recipe(models.Model):
 	created_by = models.ForeignKey(CustomModelUser, on_delete=models.CASCADE)
 	title = models.CharField(max_length=200,null=False,default="")
 	description = models.TextField(null=False)
+	image = models.ImageField(verbose_name="Imagen descriptiva",upload_to=path_to_rename,null=False, blank=True)
 	ingredients = models.JSONField(default=[])
 	steps = models.ManyToManyField(Step, related_name="recipe_steps")
 	likes = models.ManyToManyField(CustomModelUser, related_name="recipe_likes", null=True)

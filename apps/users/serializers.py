@@ -14,10 +14,19 @@ User = CustomModelUser
 
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserShortSerializer(serializers.ModelSerializer):
     class Meta:
         model=User
-        fields=("id","uuid","username","email","first_name","last_name",'image_profile')
+        fields=("uuid","username","first_name","last_name",'image_profile')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    followers = UserShortSerializer(many=True, read_only=True)
+    class Meta:
+        model=User
+        fields=("id","uuid","username","email","first_name","last_name",'image_profile', 'followers')
+
+
 
 class CreateUserSerializer(serializers.Serializer):
     id=serializers.ReadOnlyField()
