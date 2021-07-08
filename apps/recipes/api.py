@@ -156,7 +156,19 @@ class CommentRecipeView(GenericAPIView):
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 
+	def validate_user(self, user_uuid):
+		if self.request.user.uuid.strip() == user_uuid.strip():
+			return True
+		return False
+
 	def post(self, request, *args, **kwargs):
+		user_uuid = request.data.get('user_uuid')
+
+		if not self.validate_user(user_uuid):
+			return Response({"message":"Usuario no verificado"}, status.HTTP_400_BAD_REQUEST)
+		serialized = self.get_serializer(data=request.data)
+		serialized.is_valid(raise_exception=True)
+		serialized.save()
 		return Response({"message":"Comentario creado satisfactoriamente"}, status.HTTP_201_CREATED)
 
 

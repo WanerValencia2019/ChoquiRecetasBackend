@@ -1,14 +1,15 @@
 
 from django.urls import path
-from .api import RecipeDetailView, LikeRecipeView, CreateRecipeView, UserRecipesView, RecipesView, UpdateRecipeView
+from . import api
 
 app_name = 'recipes'
 
 urlpatterns = [
-	path('all',RecipesView.as_view(), name="all-recipes"),
-	path('<str:uuid>', RecipeDetailView.as_view(), name='detail-recipe'),
-	path('create', CreateRecipeView.as_view(), name='create-recipe'),
-	path('update/<str:uuid>', UpdateRecipeView.as_view(), name='update-recipe'),
-	path('like', LikeRecipeView.as_view(), name='like-recipe'),
-	path('user/<str:uuid>', UserRecipesView.as_view(), name="user_recipes")
+	path('create',api.CreateRecipeView.as_view(), name='create-recipe'),
+	path('all',api.RecipesView.as_view(), name="all-recipes"),
+	path('like',api.LikeRecipeView.as_view(), name='like-recipe'),
+	path('comment', api.CommentRecipeView.as_view(), name="comment-recipe"),
+	path('<str:uuid>',api.RecipeDetailView.as_view(), name='detail-recipe'),
+	path('update/<str:uuid>',api.UpdateRecipeView.as_view(), name='update-recipe'),
+	path('user/<str:uuid>',api.UserRecipesView.as_view(), name="user_recipes"),
 ]

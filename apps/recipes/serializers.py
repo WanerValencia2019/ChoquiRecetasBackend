@@ -245,8 +245,22 @@ class CommentRecipeSerializer(serializers.Serializer):
 	user_uuid = serializers.CharField(max_length=42)
 	comment  = serializers.CharField()
 
+	def create(self, validated_data):
+		recipe_uuid = validated_data.get('recipe_uuid')
+		user_uuid = validated_data.get('user_uuid')
+		comment = validated_data.get('comment')
+		user = User.objects.filter(uuid=user_uuid).first()
+		recipe =Recipe.objects.filter(uuid=recipe_uuid).first()
+		comment = CommentsRecipe.objects.create(user=user, recipe=recipe,comment=comment)
+
+		return comment
+
 	def validate(self, data):
-		user = data.get('uuid')
+		recipe_uuid = data.get('recipe_uuid')
+		recipe =Recipe.objects.filter(uuid=recipe_uuid).first()
+		if recipe is None:
+			raise serializers.ValidationError({"message":"Esta receta no ha sido creada"})
+
 		return data
 
 """
