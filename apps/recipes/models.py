@@ -26,9 +26,9 @@ class Recipe(models.Model):
 	description = models.TextField(null=False)
 	image = models.ImageField(verbose_name="Imagen descriptiva",upload_to=path_to_rename,null=False, blank=True)
 	ingredients = models.JSONField(default=[])
-	steps = models.ManyToManyField(Step, related_name="recipe_steps")
-	likes = models.ManyToManyField(CustomModelUser, related_name="recipe_likes", null=True)
-	comments = models.ManyToManyField(CustomModelUser, through="CommentsRecipe", related_name="recipe_comments")
+	steps = models.ManyToManyField(Step, related_name="recipe_steps", )
+	likes = models.ManyToManyField(CustomModelUser, related_name="recipe_likes", blank=True)
+	comments = models.ManyToManyField(CustomModelUser, through="CommentsRecipe", related_name="recipe_comments", blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
 		return f"{self.title} - {self.created_by.username} - {self.uuid}"
