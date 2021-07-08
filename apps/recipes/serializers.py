@@ -240,8 +240,14 @@ class LikeRecipeSerializer(serializers.Serializer):
 		return data
 
 
+class CommentRecipeSerializer(serializers.Serializer):
+	recipe_uuid = serializers.CharField(max_length=42)
+	user_uuid = serializers.CharField(max_length=42)
+	comment  = serializers.CharField()
 
-
+	def validate(self, data):
+		user = data.get('uuid')
+		return data
 
 """
 {

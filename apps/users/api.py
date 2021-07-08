@@ -1,25 +1,24 @@
+from threading import Thread
+
+from django.contrib.auth import login, logout
+from django.middleware.csrf import get_token
+#from django.views.decorators.csrf import csrf_exempt
+
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import *
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import login, logout
-#from django.contrib.auth.models import User
-from rest_framework import status
 from rest_framework.generics import GenericAPIView,UpdateAPIView
+from rest_framework.authentication import SessionAuthentication 
+#from django.contrib.auth.models import User
 #from django.views.decorators.csrf import csrf_protect
-from django.middleware.csrf import get_token
 #from django.contrib.auth import login
 from .models import CustomModelUser, CodeVerification
-from threading import Thread
-
 from .mail import Mail
-
+from .serializers import *
 User = CustomModelUser
-from django.views.decorators.csrf import csrf_exempt
-
-from rest_framework.authentication import SessionAuthentication 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
@@ -30,22 +29,19 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 class CreateUserVIEW(GenericAPIView):
     serializer_class=CreateUserSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)
-    
+
     def post(self,request):
         #print(request)
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        
+        user = serializer.save()    
         print(user.email)
-
         codeVerification = CodeVerification.objects.create_code_verification(User, user.email)
-
         thread = Thread(target=Mail.send_code_verification, args=(
             user, codeVerification
             ))
         thread.start()
-        return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
+        return Response({"message":"A verification code has been sent to your email"}, status.HTTP_201_CREATED)
 
 class ChangeImageProfileView(GenericAPIView):
     serializer_class= ChangeImageProfile
@@ -58,7 +54,7 @@ class ChangeImageProfileView(GenericAPIView):
 
         print(user)
 
-        return Response({"message":"Image profile updated successfully"},status.HTTP_200_OK)
+        return Response({"message":"Image profile updated successfully"}, status.HTTP_200_OK)
 
 # CODE VERIFICATION
 class CodeVerificationView(GenericAPIView):
@@ -86,7 +82,7 @@ class LoginView(GenericAPIView):
         user=serializer.validated_data
         token=Token.objects.get_or_create(user=user)
         key=token[0].key
-        login(self.request,user)
+        login(self.request, user)
         print(self.headers)
         userSerialized = UserSerializer(user,context=self.get_serializer_context()).data
         return Response({"user":userSerialized,"token":key},status.HTTP_200_OK)
@@ -130,8 +126,6 @@ class SendCodeVerification(GenericAPIView):
         thread.start()
         return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
 
-
-
 class ResetPasswordSendCodeView(GenericAPIView):
     serializer_class = SendCodeVerificationSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)
@@ -142,10 +136,9 @@ class ResetPasswordSendCodeView(GenericAPIView):
 
         data=serializer.data
         user = User.objects.filter(email=data['email']).first()
-        codeVerification = CodeVerification.objects.filter(user=user).first()
-        
+        code_verification = CodeVerification.objects.filter(user=user).first()
         thread = Thread(target=Mail.send_code_verification, args=(
-            user,codeVerification
+            user, code_verification
             ))
         thread.start()
         return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
@@ -168,6 +161,7 @@ class ChangePasswordView(UpdateAPIView):
     #model=User
     permission_classes=(IsAuthenticated,)
     authentication_classes=(TokenAuthentication,)
+    
     def get_object(self,queryset=None):
         user=self.request.user
         return user

@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
-from .serializers import RecipeSerializer, CreateRecipeSerializer, LikeRecipeSerializer, PreviewRecipeSerializer, UpdateRecipeSerializer
+from . import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Recipe
 
@@ -28,8 +28,8 @@ def handle_uploaded_file(filename):
 
 
 class RecipeDetailView(APIView):
-	serializer = RecipeSerializer
-	create_serializer = CreateRecipeSerializer
+	serializer = serializers.RecipeSerializer
+	#create_serializer = serializers.CreateRecipeSerializer
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 
@@ -46,7 +46,7 @@ class RecipeDetailView(APIView):
 
 
 class CreateRecipeView(GenericAPIView):
-	serializer_class = CreateRecipeSerializer
+	serializer_class = serializers.CreateRecipeSerializer
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 
@@ -59,7 +59,7 @@ class CreateRecipeView(GenericAPIView):
 
 
 class UpdateRecipeView(UpdateAPIView):
-	serializer_class = UpdateRecipeSerializer
+	serializer_class = serializers.UpdateRecipeSerializer
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 
@@ -88,7 +88,7 @@ class UpdateRecipeView(UpdateAPIView):
 	
 
 class LikeRecipeView(GenericAPIView):
-	serializer_class = LikeRecipeSerializer
+	serializer_class = serializers.LikeRecipeSerializer
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 
@@ -103,7 +103,7 @@ class LikeRecipeView(GenericAPIView):
 class UserRecipesView(ListAPIView):
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
-	serializer_class = RecipeSerializer
+	serializer_class = serializers.RecipeSerializer
 
 	def get_queryset(self):
 		recipes = Recipe.objects.filter(created_by__uuid=self.kwargs.get('uuid')).select_related('created_by').prefetch_related('likes','comments','steps')
@@ -122,7 +122,7 @@ class UserRecipesView(ListAPIView):
 class UserPreviewRecipesView(ListAPIView):
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
-	serializer_class = PreviewRecipeSerializer
+	serializer_class = serializers.PreviewRecipeSerializer
 
 	def get_queryset(self):
 		recipes = Recipe.objects.filter(created_by__uuid=self.kwargs.get('uuid')).select_related('created_by').prefetch_related('likes','comments','steps')
@@ -148,11 +148,16 @@ class RecipesView(ListAPIView):
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 	queryset = Recipe.objects.all().select_related('created_by').prefetch_related('likes','comments','steps')
-	serializer_class = RecipeSerializer
+	serializer_class = serializers.RecipeSerializer
 	#pagination_class = StandardResultsSetPagination
 
+class CommentRecipeView(GenericAPIView):
+	serializer_class = serializers.CommentRecipeSerializer
+	permission_classes=(IsAuthenticated,)
+	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 
-
+	def post(self, request, *args, **kwargs):
+		return Response({"message":"Comentario creado satisfactoriamente"}, status.HTTP_201_CREATED)
 
 
 
