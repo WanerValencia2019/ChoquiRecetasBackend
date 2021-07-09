@@ -211,26 +211,18 @@ class LikeRecipeSerializer(serializers.Serializer):
 		recipe_uuid = validated_data.get('recipe_uuid')
 		recipe = Recipe.objects.filter(uuid=recipe_uuid).prefetch_related("likes").first()
 		user = User.objects.filter(uuid=user_uuid).first()
-
-		#print(user)
-		#print(recipe.likes.filter(id=user.id).exists())
-
 		if recipe.likes.filter(id=user.id).exists():		
 			recipe.likes.remove(user)
 		else:
 			recipe.likes.set([user])
-
 		recipe.save()
-
 		return recipe
-
 
 	def validate(self, data):
 		user_uuid = data.get('user_uuid')
 		recipe_uuid = data.get('recipe_uuid')
-
 		recipe = Recipe.objects.filter(uuid=recipe_uuid).prefetch_related("likes").first()
-
+		
 		if recipe is not None:
 			user = User.objects.filter(uuid=user_uuid).first()
 			if user is None:

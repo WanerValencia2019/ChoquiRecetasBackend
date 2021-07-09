@@ -55,7 +55,7 @@ class CreateRecipeView(GenericAPIView):
 		recipe.is_valid(raise_exception=True)
 		recipe.save()
 		
-		return Response({"message":"Receta creada satisfactoriamente"}, status.HTTP_200_OK)
+		return Response({"message":"Receta creada satisfactoriamente"}, status.HTTP_201_CREATED)
 
 
 class UpdateRecipeView(UpdateAPIView):
@@ -97,7 +97,7 @@ class LikeRecipeView(GenericAPIView):
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
 		
-		return Response({"message":"Operación realizada con éxito"}, status.HTTP_200_OK)
+		return Response({"message":"Operación realizada con éxito"}, status.HTTP_201_CREATED)
 
 
 class UserRecipesView(ListAPIView):
@@ -134,7 +134,6 @@ class UserPreviewRecipesView(ListAPIView):
 		objs = self.get_queryset()
 		recipes_serialized = self.get_serializer(instance=objs, many=True)
 		data = recipes_serialized.data
-
 		return Response(data, status.HTTP_200_OK)
 
 
