@@ -161,14 +161,12 @@ class UpdateRecipeSerializer(serializers.Serializer):
 		image = get_binary_content(validated_data.get('image'))
 		uuid = validated_data.get('uuid')
 		objs_steps = []
-
 		recipe = Recipe.objects.filter(uuid=uuid).first()
 		recipe.title=title
 		recipe.description=description
 		recipe.ingredients=ingredients
 		recipe.image.save("default.jpeg", image, save=False)
-		recipe.save()
-		
+		recipe.save()		
 		for step in steps:
 			obj = Step.objects.filter(id=step.get('id')).first()
 			obj.description = step.get('description')
@@ -177,7 +175,7 @@ class UpdateRecipeSerializer(serializers.Serializer):
 			if file is not None:
 				obj.image.save("default.jpeg", file, save=False)
 			objs_steps.append(obj)
-		Step.objects.bulk_update(objs_steps, ['description','image'])
+		Step.objects.bulk_update(objs_steps, ['description','image'])		
 		return recipe
 
 	def validate(self, data):
@@ -185,8 +183,7 @@ class UpdateRecipeSerializer(serializers.Serializer):
 		title = data.get('title')
 		description = data.get('description')
 		ingredients = data.get('ingredients')
-		image = data.get('image')
-		user = User.objects.filter(uuid=created_by).first()
+		image = data.get('image')		
 
 		if len(image)%4 != 0:
 			raise serializers.ValidationError({"message":"La imagen no es válida"})
@@ -222,7 +219,7 @@ class LikeRecipeSerializer(serializers.Serializer):
 		user_uuid = data.get('user_uuid')
 		recipe_uuid = data.get('recipe_uuid')
 		recipe = Recipe.objects.filter(uuid=recipe_uuid).prefetch_related("likes").first()
-		
+
 		if recipe is not None:
 			user = User.objects.filter(uuid=user_uuid).first()
 			if user is None:

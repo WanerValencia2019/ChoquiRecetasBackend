@@ -81,7 +81,7 @@ class UpdateRecipeView(UpdateAPIView):
 		serialized = self.get_serializer(data=request.data)
 		serialized.is_valid(raise_exception=True)
 		serialized.save(uuid=uuid)
-		print(serialized.data)
+		#print(serialized.data)
 
 		return Response({"message":"Receta actualizada éxitosamente"}, status.HTTP_200_OK)
 
