@@ -1,7 +1,9 @@
 from rest_framework.generics import GenericAPIView, ListAPIView, UpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
@@ -11,10 +13,15 @@ from .models import Recipe
 
 import base64
 
+
+
+
+
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
+
 
 
 
@@ -25,43 +32,15 @@ def handle_uploaded_file(filename):
 	with open(f"./{name}.{ext}", "wb") as destination:
 			destination.write(f)
 
-
-
-class RecipeDetailView(APIView):
-	serializer = serializers.RecipeSerializer
-	#create_serializer = serializers.CreateRecipeSerializer
+class RecipeView(ViewSet):
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
+	lookup_field = "uuid"
+	queryset = Recipe.objects.all().select_related('created_by').prefetch_related('likes','comments','steps')
 
-
-	def get(self, request, format=None, uuid=None):
-		recipe = Recipe.objects.filter(uuid=uuid).first()
-		if recipe is None:
-			return Response({"message":"Esta receta no existe"}, status.HTTP_400_BAD_REQUEST)
-		recipe_serialized = self.serializer(instance=recipe, context={"request":request})
-		data={}
-		data = recipe_serialized.data
-		#print("Holaaa")
-		return Response(data, status.HTTP_200_OK)
-
-
-class CreateRecipeView(GenericAPIView):
-	serializer_class = serializers.CreateRecipeSerializer
-	permission_classes=(IsAuthenticated,)
-	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
-
-	def post(self, request):
-		recipe = self.get_serializer(data=request.data)
-		recipe.is_valid(raise_exception=True)
-		recipe.save()
-		
-		return Response({"message":"Receta creada satisfactoriamente"}, status.HTTP_201_CREATED)
-
-
-class UpdateRecipeView(UpdateAPIView):
-	serializer_class = serializers.UpdateRecipeSerializer
-	permission_classes=(IsAuthenticated,)
-	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
+	def get_queryset(self):
+		uuid = self.kwargs.get('uuid')
+		return Recipe.objects.filter(uuid=uuid).first()
 
 	def get_object(self):
 		uuid = self.kwargs.get('uuid')
@@ -72,34 +51,65 @@ class UpdateRecipeView(UpdateAPIView):
 		except ObjectDoesNotExist as ex:
 			return None
 
+	def list(self, request, *args, **kwargs):
+		serialized = serializers.RecipeSerializer(self.queryset, many=True)
+		data = serialized.data
+
+		return Response(data, status=status.HTTP_200_OK)
+
+	def create(self, request, *args, **kwargs):
+		recipe = serializers.CreateRecipeSerializer(data=request.data)
+		recipe.is_valid(raise_exception=True)
+		recipe.save()
+		return Response({"message":"Receta creada satisfactoriamente"}, status.HTTP_201_CREATED)
+
+	def retrieve(self, request,format=None, uuid=None):
+		print(uuid)
+		recipe = self.get_queryset()
+		if recipe is None:
+			return Response({"message":"Esta receta no existe"}, status.HTTP_400_BAD_REQUEST)
+		recipe_serialized = serializers.RecipeSerializer(instance=recipe, context={"request":request})
+		data={}
+		data = recipe_serialized.data
+		#print("Holaaa")
+		return Response(data, status.HTTP_200_OK)
+	
 	def update(self, request, *args, **kwargs):	
 		recipe = self.get_object()
 		uuid = self.kwargs.get('uuid')
 		if recipe is None:
 			return Response({"message":"Esta receta no ha sido creada"}, status.HTTP_400_BAD_REQUEST)
 
-		serialized = self.get_serializer(data=request.data)
+		serialized = serializers.UpdateRecipeSerializer(data=request.data)
 		serialized.is_valid(raise_exception=True)
 		serialized.save(uuid=uuid)
 		#print(serialized.data)
 
 		return Response({"message":"Receta actualizada éxitosamente"}, status.HTTP_200_OK)
 
-	
-
-class LikeRecipeView(GenericAPIView):
-	serializer_class = serializers.LikeRecipeSerializer
-	permission_classes=(IsAuthenticated,)
-	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
-
-	def post(self, request):
-		serializer = self.get_serializer(data=request.data)
-		serializer.is_valid(raise_exception=True)
-		serializer.save()
+	@action(methods=['post'],detail=True, url_name="like")
+	def like(self, request, *args, **kwargs):
+		recipe = self.get_queryset()	
+		if recipe is None:
+			return Response({"message":"Esta receta no existe"},status.HTTP_200_OK)
 		
-		return Response({"message":"Operación realizada con éxito"}, status.HTTP_201_CREATED)
+		serialized = serializers.LikeRecipeSerializer(instance=recipe, data={}, context={"request":self.request})
+		serialized.is_valid(raise_exception=True)
+		serialized.save()
+		return Response({"message":"Operación realizada con éxito"}, status.HTTP_204_NO_CONTENT)
 
+	@action(methods=['post'],detail=True, url_name="comment",)
+	def comment(self, request, *args, **kwargs):
+		recipe = self.get_queryset()
+		comment = self.request.data.get('comment')
+		if recipe is None:
+			return Response({"message":"Esta receta no existe"},status.HTTP_200_OK)
 
+		serialized = serializers.CommentRecipeSerializer(data={"comment":comment},context={"request":self.request, "recipe":recipe})
+		serialized.is_valid(raise_exception=True)
+		serialized.save()
+		return Response({"message":"Comentario creado satisfactoriamente"}, status.HTTP_201_CREATED)	
+	
 class UserRecipesView(ListAPIView):
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
@@ -142,33 +152,6 @@ class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     #max_page_size = 1000
 
-
-class RecipesView(ListAPIView):
-	permission_classes=(IsAuthenticated,)
-	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
-	queryset = Recipe.objects.all().select_related('created_by').prefetch_related('likes','comments','steps')
-	serializer_class = serializers.RecipeSerializer
-	#pagination_class = StandardResultsSetPagination
-
-class CommentRecipeView(GenericAPIView):
-	serializer_class = serializers.CommentRecipeSerializer
-	permission_classes=(IsAuthenticated,)
-	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
-
-	def validate_user(self, user_uuid):
-		if self.request.user.uuid.strip() == user_uuid.strip():
-			return True
-		return False
-
-	def post(self, request, *args, **kwargs):
-		user_uuid = request.data.get('user_uuid')
-
-		if not self.validate_user(user_uuid):
-			return Response({"message":"Usuario no verificado"}, status.HTTP_400_BAD_REQUEST)
-		serialized = self.get_serializer(data=request.data)
-		serialized.is_valid(raise_exception=True)
-		serialized.save()
-		return Response({"message":"Comentario creado satisfactoriamente"}, status.HTTP_201_CREATED)
 
 
 

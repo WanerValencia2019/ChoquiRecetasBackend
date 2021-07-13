@@ -14,8 +14,6 @@ from images import image_principal, step_one_image, step_two_image, fail_image
 
 User = CustomModelUser
 
-
-
 class RecipeTestCase(APITestCase):
     def setUp(self):
         self.user = User(is_active=True,username="test_admin", first_name="Tests", last_name="Admin")
@@ -96,7 +94,7 @@ class RecipeTestCase(APITestCase):
             ]
         }
         response_succes = {'message': 'Receta creada satisfactoriamente'}
-        response = self.client.post("/api/v1/recipes/create", data, format="json", )
+        response = self.client.post("/api/v1/recipes/", data, format="json", )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertJSONEqual(json.dumps(response_succes), response.data)    
     
@@ -129,7 +127,7 @@ class RecipeTestCase(APITestCase):
             ]
         }
         response_succes = {'message': 'Receta creada satisfactoriamente'}
-        response = self.client.post("/api/v1/recipes/create", data, format="json", )
+        response = self.client.post("/api/v1/recipes/", data, format="json", )
         #print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertJSONEqual(json.dumps(response_succes), response.data)
@@ -163,7 +161,7 @@ class RecipeTestCase(APITestCase):
             ]
         }
         response_succes = {"message":"Receta actualizada éxitosamente"}
-        response = self.client.put(f"/api/v1/recipes/update/{self.recipe.uuid}",data,format="json")    
+        response = self.client.put(f"/api/v1/recipes/{self.recipe.uuid}/",data,format="json")    
         #Por alguna razón en los test las variables description y title no actualizan
         #print(self.recipe.description, self.recipe.title)
         #self.assertEqual(self.recipe.title, data.get('title'))
@@ -172,7 +170,7 @@ class RecipeTestCase(APITestCase):
 
         
     def test_detail_recipe(self):
-        response = self.client.get(f"/api/v1/recipes/{self.recipe.uuid}",format="json")
+        response = self.client.get(f"/api/v1/recipes/{self.recipe.uuid}/",format="json")
         #print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.user.uuid, response.data['created_by'].get('uuid'))
@@ -185,25 +183,19 @@ class RecipeTestCase(APITestCase):
         self.assertEqual(self.user.uuid, response.data[0]['created_by'].get('uuid'))        
 
     def test_like_recipe(self):
-        data = {
-            "user_uuid": self.user.uuid,
-            "recipe_uuid": self.recipe.uuid
-        }
         response_succes = {'message': 'Operación realizada con éxito'}
-        response = self.client.post("/api/v1/recipes/like",data,format="json")
+        response = self.client.post(f"/api/v1/recipes/{self.recipe.uuid}/like/",format="json")
         
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(1, self.recipe.likes.all().count())
         self.assertJSONEqual(json.dumps(response_succes), response.data)
     
     def test_comment_recipe(self):
         data = {
-            "user_uuid": self.user.uuid,
-            "recipe_uuid": self.recipe.uuid,
             "comment": "Este es un comentario hecho por el test admin"
         }
         response_succes = {"message":"Comentario creado satisfactoriamente"}
-        response = self.client.post("/api/v1/recipes/comment",data,format="json")
+        response = self.client.post(f"/api/v1/recipes/{self.recipe.uuid}/comment/",data,format="json")
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertJSONEqual(json.dumps(response_succes), response.data)
