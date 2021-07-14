@@ -2,7 +2,7 @@ import json
 import unittest
 
 from django.test import TestCase
-from apps.recipes.models import Recipe, Step, CommentsRecipe
+from apps.recipes.models import Recipe, Step, Comment
 from apps.users.models import CustomModelUser
 
 from rest_framework.authtoken.models import Token
@@ -38,33 +38,39 @@ class RecipeTestCase(APITestCase):
             "steps": [
                 {	
                     "description": "Mezclamos la comida y montamos al fogón",
-                    "image": step_one_image
+                    "image": step_one_image,
+                    "number":1,
                 },
                 {
                     "description": "Cocinamos con revueltos al gusto",
-                    "image": step_two_image
+                    "image": step_two_image,
+                    "number": 2,
                 }
-            ]
+            ],
+            "preparation_time": "short",
+            "difficulty": "easy"
         }
         image = get_binary_content(data.get('image'))
         self.recipe = Recipe()
         self.recipe.created_by=self.user
         self.recipe.title=data.get('title')
         self.recipe.image.save("name_image.jpeg",image, save=False)
-        self.recipe.ingredients = data.get('ingredients')
-        self.recipe.description = data.get('description')
+        self.recipe.ingredients = data.get('ingredients')        
+        self.recipe.preparation_time = data.get('preparation_time')
+        self.recipe.difficulty = data.get('difficulty')
         self.recipe.save()
         objs_steps = []
-        for step in data.get('steps'):
+        for step in data.get("steps"):
             obj = Step()
+            obj.recipe = self.recipe
             obj.description = step.get('description')
+            obj.number = step.get('number')
             file = get_binary_content(step.get('image'))
             #print(file)
             if file is not None:
                 obj.image.save("name_image.jpeg",file, save=False)
             objs_steps.append(obj)
-        self.recipe.steps.set(self.recipe.steps.bulk_create(objs_steps))
-        self.recipe.save()
+        self.recipe.step_set.bulk_create(objs_steps)
 
     def test_create_recipe(self):
         data = {
@@ -85,13 +91,17 @@ class RecipeTestCase(APITestCase):
             "steps": [
                 {	
                     "description": "Mezclamos la comida y montamos al fogón",
-                    "image": step_one_image
+                    "image": step_one_image,
+                    "number": 1
                 },
                 {
                     "description": "Cocinamos con revueltos al gusto",
-                    "image": step_two_image
+                    "image": step_two_image,
+                    "number": 2
                 }
-            ]
+            ],
+            "preparation_time": "short",
+            "difficulty": "easy"
         }
         response_succes = {'message': 'Receta creada satisfactoriamente'}
         response = self.client.post("/api/v1/recipes/", data, format="json", )
@@ -118,13 +128,17 @@ class RecipeTestCase(APITestCase):
             "steps": [
                 {	
                     "description": "Mezclamos la comida y montamos al fogón",
-                    "image": step_one_image
+                    "image": step_one_image,
+                    "number": 1
                 },
                 {
                     "description": "Cocinamos con revueltos al gusto",
-                    "image": step_two_image
+                    "image": step_two_image,
+                    "number": 2
                 }
-            ]
+            ],
+            "preparation_time": "short",
+            "difficulty": "easy"
         }
         response_succes = {'message': 'Receta creada satisfactoriamente'}
         response = self.client.post("/api/v1/recipes/", data, format="json", )
@@ -149,16 +163,25 @@ class RecipeTestCase(APITestCase):
             ],
             "steps": [
                 {	
-                    "id": self.recipe.steps.all()[0].id,
+                    "id": self.recipe.step_set.all()[0].id,
                     "description": "Mezclamos la comida y montamos a la estufa",
-                    "image": step_one_image
+                    "image": step_one_image,
+                    "number": 1
                 },
                 {
-                    "id":self.recipe.steps.all()[1].id,
+                    "id":self.recipe.step_set.all()[1].id,
                     "description": "Cocinamos con sal al gusto - 2 veces",
-                    "image": step_two_image
-                }
-            ]
+                    "image": step_two_image,
+                    "number": 2
+                },
+                {
+                    "description": "Cocinamos de manera personal",
+                    "image": step_two_image,
+                    "number": 3
+                },
+            ],
+            "preparation_time": "short",
+            "difficulty": "easy"
         }
         response_succes = {"message":"Receta actualizada éxitosamente"}
         response = self.client.put(f"/api/v1/recipes/{self.recipe.uuid}/",data,format="json")    
@@ -199,7 +222,7 @@ class RecipeTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertJSONEqual(json.dumps(response_succes), response.data)
-        self.assertEqual(1, self.recipe.commentsrecipe_set.all().count())
-        self.assertEqual(data.get('comment'), self.recipe.commentsrecipe_set.all().first().comment)
+        self.assertEqual(1, self.recipe.comment_set.all().count())
+        self.assertEqual(data.get('comment'), self.recipe.comment_set.all().first().comment)
 
 
