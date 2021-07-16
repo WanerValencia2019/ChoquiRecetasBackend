@@ -17,7 +17,7 @@ from rest_framework.authentication import SessionAuthentication
 #from django.contrib.auth import login
 from .models import CustomModelUser, CodeVerification
 from .mail import Mail
-from .serializers import *
+from . import serializers
 User = CustomModelUser
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -27,7 +27,7 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 #REGISTER
 class CreateUserVIEW(GenericAPIView):
-    serializer_class=CreateUserSerializer
+    serializer_class= serializers.CreateUserSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self,request):
@@ -44,35 +44,29 @@ class CreateUserVIEW(GenericAPIView):
         return Response({"message":"A verification code has been sent to your email"}, status.HTTP_201_CREATED)
 
 class ChangeImageProfileView(GenericAPIView):
-    serializer_class= ChangeImageProfile
-    authentication_classes = (CsrfExemptSessionAuthentication,)
+    serializer_class= serializers.ChangeImageProfileSerializer
+    authentication_classes = (TokenAuthentication, CsrfExemptSessionAuthentication,)
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-
-        print(user)
-
         return Response({"message":"Image profile updated successfully"}, status.HTTP_200_OK)
 
 # CODE VERIFICATION
 class CodeVerificationView(GenericAPIView):
-    serializer_class = CodeVerificationSerializer
-    authentication_classes = (CsrfExemptSessionAuthentication,)
+    serializer_class = serializers.CodeVerificationSerializer
+    authentication_classes = (TokenAuthentication, CsrfExemptSessionAuthentication,)
     
     def post(self,request):
         #print(request)
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        data=serializer.data
-        print(data)
         return Response({"message":"Cuenta verificada con éxito"},status.HTTP_200_OK)
 
 #LOGIN
 class LoginView(GenericAPIView):
-    serializer_class=LoginSerializer
+    serializer_class=serializers.LoginSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self,request):
@@ -84,12 +78,12 @@ class LoginView(GenericAPIView):
         key=token[0].key
         login(self.request, user)
         print(self.headers)
-        userSerialized = UserSerializer(user,context=self.get_serializer_context()).data
+        userSerialized = serializers.UserSerializer(user,context=self.get_serializer_context()).data
         return Response({"user":userSerialized,"token":key},status.HTTP_200_OK)
 
 class ProfileView(GenericAPIView):
     permission_classes=(IsAuthenticated,)
-    authentication_classes=(TokenAuthentication,)
+    authentication_classes=(TokenAuthentication, CsrfExemptSessionAuthentication)
 
     def get(self, request, format=None):
         print(dir(request))
@@ -100,16 +94,16 @@ class ProfileView(GenericAPIView):
 
 class LogoutView(APIView):
     permission_classes=(IsAuthenticated,)
-    authentication_classes=(TokenAuthentication,)
+    authentication_classes=(TokenAuthentication, CsrfExemptSessionAuthentication)
     def post(self,request):
         self.headers.setdefault("X-CSRFToken",get_token(request))
-        user=request.user
+        user = request.user
         logout(request)
         user.auth_token.delete()
         return Response({"User":"Sesión terminada"},status.HTTP_200_OK)
 
 class SendCodeVerification(GenericAPIView):
-    serializer_class = SendCodeVerificationSerializer
+    serializer_class = serializers.SendCodeVerificationSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)    
 
     def post(self,request):
@@ -127,7 +121,7 @@ class SendCodeVerification(GenericAPIView):
         return Response({"message":"A verification code has been sent to your email"},status.HTTP_200_OK)
 
 class ResetPasswordSendCodeView(GenericAPIView):
-    serializer_class = SendCodeVerificationSerializer
+    serializer_class = serializers.SendCodeVerificationSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self,request):
@@ -145,7 +139,7 @@ class ResetPasswordSendCodeView(GenericAPIView):
 
 
 class ResetPasswordVerifyCodeView(GenericAPIView):
-    serializer_class = ResetPasswordVerifyCodeSerializer
+    serializer_class = serializers.ResetPasswordVerifyCodeSerializer
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def post(self,request):
@@ -157,19 +151,17 @@ class ResetPasswordVerifyCodeView(GenericAPIView):
 
 #CAMBIANDO LA CONTRASEÑA DEL USUARIO
 class ChangePasswordView(UpdateAPIView):
-    serializer_class=ChangePasswordSerializer
-    #model=User
+    serializer_class=serializers.ChangePasswordSerializer
     permission_classes=(IsAuthenticated,)
     authentication_classes=(TokenAuthentication,)
     
     def get_object(self,queryset=None):
         user=self.request.user
         return user
+
 #CAMBIANDO EL NOMBRE DEL USUARIO
-
-
 class ChangeNamesView(UpdateAPIView):
-    serializer_class=ChangeNamesSerializer
+    serializer_class=serializers.ChangeNamesSerializer
     model=User
     permission_classes=(IsAuthenticated,)
     authentication_classes=(TokenAuthentication,)
@@ -178,7 +170,7 @@ class ChangeNamesView(UpdateAPIView):
         return user
 
 class ChangeUsernameView(UpdateAPIView):
-    serializer_class=ChangeUsernameSerializer
+    serializer_class=serializers.ChangeUsernameSerializer
     model=User
     permission_classes=(IsAuthenticated,)
     authentication_classes=(TokenAuthentication,)
@@ -187,7 +179,7 @@ class ChangeUsernameView(UpdateAPIView):
         return user
 
 class ChangeEmailView(UpdateAPIView):
-    serializer_class=ChangeEmailSerializer
+    serializer_class=serializers.ChangeEmailSerializer
     model=User
     permission_classes=(IsAuthenticated,)
     authentication_classes=(TokenAuthentication,)
@@ -200,7 +192,7 @@ class UserInfo(APIView):
     authentication_classes=(TokenAuthentication,)
 
     def get(self,request):
-        serializer=UserSerializer(request.user)
+        serializer=serializers.UserSerializer(request.user)
         token=Token.objects.get(user=request.user)
         print(token)
         user=serializer.data

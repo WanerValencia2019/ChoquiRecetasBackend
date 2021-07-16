@@ -34,7 +34,6 @@ class CreateUserSerializer(serializers.Serializer):
     last_name=serializers.CharField(required=True)
     first_name=serializers.CharField(required=True)
     email=serializers.EmailField()
-    image_profile=serializers.ImageField()
     password=serializers.CharField(required=True)
     password_confirm=serializers.CharField(required=True)
     def create(self,validated_data):
@@ -44,9 +43,6 @@ class CreateUserSerializer(serializers.Serializer):
         user.last_name=validated_data.get('last_name')
         user.email=validated_data.get('email')
         user.is_active=False
-        #print(validated_data.get('image_profile'))
-        #print(dir(validated_data.get('image_profile')))
-        #user.image_profile = validated_data.get('image_profile')
         user.set_password(validated_data.get('password'))
         user.save()
         return user
@@ -62,34 +58,21 @@ class CreateUserSerializer(serializers.Serializer):
 
         return validated_data
 
-
-
-
-
-class ChangeImageProfile(serializers.Serializer):
-    user_uuid = serializers.CharField(max_length=42,required = True)
+class ChangeImageProfileSerializer(serializers.Serializer):
     image_profile=serializers.CharField(required = True)
 
     def create(self, validated_data):
         image = get_binary_content(validated_data.get('image_profile'))
-        user = User.objects.filter(uuid=validated_data.get('user_uuid')).first()
+        user = self.context['request'].user
         user.image_profile.save("default.jpeg",image, save=False)
         user.save()
 
         return user
 
     def validate(self, data):
-        uuid = data.get('user_uuid')
         image = data.get('image_profile')
-
-        user = User.objects.filter(uuid=uuid).first()
-
         if len(image)%4 != 0:
             raise serializers.ValidationError({"message":"Esta imagén no es válida"}) 
-
-        if user is None:
-            raise serializers.ValidationError({"message":"Este usuario no se encuentra registrado"})
-
         return data
 
 
@@ -177,6 +160,10 @@ class ResetPasswordVerifyCodeSerializer(serializers.Serializer):
 
 #cambiando la contraseña del usuario, CHANGE PASSWORD
 class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    password_confirm = serializers.CharField(required=True)
+
     def validate(self,validated_data):
         #print(validated_data)
         user=self.context['request'].user
@@ -187,15 +174,15 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not(user.check_password(old_password)):
             raise serializers.ValidationError({"message":"La contraseña actual no es correcta"})
 
-        elif not(validated_data.get('password')== validated_data.get('password_confirm')):
+        elif not(validated_data.get('new_password')== validated_data.get('password_confirm')):
             raise serializers.ValidationError({"message":"Las contraseñas no coinciden"})
 
-        elif not (len(validated_data.get('password'))>8):
+        elif not (len(validated_data.get('new_password'))>8):
             raise serializers.ValidationError({"message":"La contraseña debe contener mas caracteres"})
         return validated_data
 
     def update(self,user,validated_data):
-        user.set_password(validated_data.get('password'))
+        user.set_password(validated_data.get('new_password'))
         user.save()
         return user
 
@@ -205,7 +192,6 @@ class ChangeNamesSerializer(serializers.Serializer):
     last_name=serializers.CharField(required=True)
 
     def update(self,user,validated_data):
-        print(dir(user.first_name))
         user.first_name=validated_data.get('first_name')
         user.last_name=validated_data.get('last_name')
         user.save()

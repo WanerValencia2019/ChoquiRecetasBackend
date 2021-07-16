@@ -20,7 +20,7 @@ class Recipe(models.Model):
 	title = models.CharField(max_length=200,null=False,default="")
 	description = models.TextField(null=False)
 	image = models.ImageField(verbose_name="Imagen descriptiva",upload_to=path_to_rename,null=False, blank=True)
-	ingredients = models.JSONField(default=[])
+	ingredients = models.JSONField(default=list())
 	preparation_time = models.CharField(max_length=6, choices=[x.value for x in PreparationTime], default=PreparationTime.SHORT)
 	difficulty = models.CharField(max_length=6, choices=[x.value for x in Difficulty], default=Difficulty.EASY)
 	likes = models.ManyToManyField(CustomModelUser, related_name="recipe_likes", blank=True)	
