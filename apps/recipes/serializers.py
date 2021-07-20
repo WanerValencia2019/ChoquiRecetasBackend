@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.users.models import CustomModelUser
-from apps.users.serializers import UserSerializer
+#from apps.users.serializers import UserSerializer
 from apps.utils import get_binary_content
 
 from .models import Recipe, Comment, Step

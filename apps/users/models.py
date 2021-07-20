@@ -17,10 +17,11 @@ def path_to_rename(instance, filename):
 	return f"profiles/{name}.{extension}"
 
 
+
+
 class CustomModelUser(AbstractUser):
 	uuid = models.CharField(max_length=40, null=True, blank=True, )
 	user_outstanding = models.BooleanField(default=False)
-	followers = models.ManyToManyField("self")
 	image_profile = models.ImageField(verbose_name="Imagén de perfil", upload_to=path_to_rename,null=True, blank=True)
     
 	def __str__(self):
@@ -30,6 +31,15 @@ class CustomModelUser(AbstractUser):
 def set_uuid(instance, *args, **kwargs):
 	if not instance.uuid:
 		instance.uuid = uuid.uuid4().hex
+
+
+class Follower(models.Model):
+	user = models.ForeignKey(CustomModelUser, on_delete=models.CASCADE, blank=True,null=True, related_name="user_followed")
+	follower = models.ForeignKey(CustomModelUser, on_delete=models.CASCADE, blank=True, null=True, related_name="user_follower")
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	def __str__(self):
+		return f"{self.user} - {self.follower}"
 
 
 class CodeVerification(models.Model):

@@ -4,12 +4,12 @@ from rest_framework.authtoken.models import Token
 from django.db.models import Q
 from threading import Thread
 
-from .models import CustomModelUser, CodeVerification
+from .models import CustomModelUser, CodeVerification, Follower
 from .utils import get_random_string
 
 from .mail import Mail
 from apps.utils import get_binary_content
-
+from apps.recipes.serializers import RecipeSerializer
 User = CustomModelUser
 
 
@@ -19,12 +19,26 @@ class UserShortSerializer(serializers.ModelSerializer):
         model=User
         fields=("uuid","username","first_name","last_name",'image_profile')
 
+class FollowerSerializer(serializers.ModelSerializer):
+    user = UserShortSerializer(read_only=True)
+    class Meta:
+        model=Follower
+        exclude = ('follower','id')
+
+class FollowingSerializer(serializers.ModelSerializer):
+    follower = UserShortSerializer(read_only=True)
+    class Meta:
+        model=Follower
+        exclude = ('user','id')
+
 
 class UserSerializer(serializers.ModelSerializer):
-    followers = UserShortSerializer(many=True, read_only=True)
+    recipes = RecipeSerializer(many=True, read_only=True,source="recipe_set")
+    followers = FollowerSerializer(many=True, read_only=True,source="user_followed")
+    followings = FollowingSerializer(many=True, read_only=True,source="user_follower")
     class Meta:
         model=User
-        fields=("id","uuid","username","email","first_name","last_name",'image_profile', 'followers')
+        fields=("id","uuid","username","email","first_name","last_name","followers","followings",'recipes','image_profile')
 
 
 
