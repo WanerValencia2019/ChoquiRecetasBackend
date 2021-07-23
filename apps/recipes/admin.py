@@ -4,7 +4,18 @@ from .models import Recipe, Comment, Step
 
 
 class StepAdmin(admin.ModelAdmin):
-    list_display = ['description',]
+    fieldsets = (
+        (None,{
+            "fields":("number","recipe","description")
+        }),
+        ("Archivos",{
+            "fields":("image",)
+        })
+    )
+    list_display = ['recipe','number','description','image']
+    list_filter = ['recipe']
+    #radio_fields = {'recipe':admin.HORIZONTAL}
+    search_fields = ('description','recipe__title')
 
 
 admin.site.register(Step, StepAdmin)

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.admindocs',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -217,12 +218,14 @@ JAZZMIN_SETTINGS = {
     "site_logo": "LOGO.svg",
     "copyright": "Waner Valencia",
     "user_avatar": "image_profile",
-    #"changeform_format": "horizontal_tabs",
+    "changeform_format": "collapsible",
     "show_ui_builder": True,
     "topmenu_links": [
         {"name": "Inicio",  "url": "admin:index", "permissions": ["auth.view_user"]},
         # external url that opens in a new window (Permissions can be added)
         {"name": "Soporte", "url": "https://github.com/WanerValencia2019", "new_window": True},
+        {"name": "Documentación", "url": "/admin/doc"},
+        {"name": "API", "url": "/admin/doc"},
     ],
     "usermenu_links": [
         {"name": "Soporte", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},

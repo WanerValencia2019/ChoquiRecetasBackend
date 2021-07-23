@@ -26,7 +26,7 @@ class Recipe(models.Model):
 	likes = models.ManyToManyField(CustomModelUser, related_name="recipe_likes", blank=True)	
 	created_at = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
-		return f"{self.title} - {self.created_by.username} - {self.uuid}"
+		return f"{self.title}"
 
 
 @receiver(pre_save,sender=Recipe)
@@ -44,12 +44,15 @@ class Comment(models.Model):
 		return f"{self.user.username} - {self.recipe.title}"
 
 class Step(models.Model):
-	recipe=models.ForeignKey(Recipe, on_delete=models.CASCADE)
-	description = models.TextField(null=False)
-	image = models.ImageField(upload_to=path_to_rename, null=True, blank=True)
-	number = models.PositiveIntegerField(default=1)
+	recipe=models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Receta")
+	description = models.TextField(null=False, verbose_name="Descripción")
+	image = models.ImageField(upload_to=path_to_rename, null=False, blank=False, verbose_name="Imagen descriptiva")
+	number = models.PositiveIntegerField(default=1, verbose_name="#")
 
 	def __str__(self):
 		return f"{self.recipe.title} - {self.recipe.title}"
 
-
+	class Meta:
+		verbose_name = "Paso"
+		verbose_name_plural = "Pasos"
+		ordering = ['recipe__id','number']

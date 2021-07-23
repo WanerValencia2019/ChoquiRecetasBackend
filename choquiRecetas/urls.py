@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 admin.site.site_title = "API DE RECETAS"
 
 urlpatterns = [
+    path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('', include('rest_framework.urls')),
     path('api/v1/auth/',include('apps.users.urls'),name="auth"),
