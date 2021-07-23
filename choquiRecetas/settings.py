@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.admindocs',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
     'corsheaders',
     'apps.users',
     'apps.recipes',
@@ -225,7 +226,7 @@ JAZZMIN_SETTINGS = {
         # external url that opens in a new window (Permissions can be added)
         {"name": "Soporte", "url": "https://github.com/WanerValencia2019", "new_window": True},
         {"name": "Documentación", "url": "/admin/doc"},
-        {"name": "API", "url": "/admin/doc"},
+        {"name": "API", "url": "/swagger"},
     ],
     "usermenu_links": [
         {"name": "Soporte", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
