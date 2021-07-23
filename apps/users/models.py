@@ -25,7 +25,7 @@ class CustomModelUser(AbstractUser):
 	image_profile = models.ImageField(verbose_name="Imagén de perfil", upload_to=path_to_rename,null=True, blank=True)
     
 	def __str__(self):
-		return f"{self.uuid} - {self.username}"
+		return f"{self.username}"
 
 @receiver(pre_save,sender=CustomModelUser)
 def set_uuid(instance, *args, **kwargs):

@@ -18,6 +18,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+admin.site.site_title = "API DE RECETAS"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('rest_framework.urls')),
