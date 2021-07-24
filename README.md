@@ -27,6 +27,7 @@ API de recetas
     - El archivo debe contener las siguientes propiedades: ***Ejemplo***
       - SECRET_KEY= &e_#wg+qa_7tx_9m)09rs$%6&kw38umd&q0xni9*5lb*rbg62l
       - EMAIL_HOST_USER = correo@gmail.com
+      - DEBUG=True
       - EMAIL_HOST_PASSWORD = contraseña
       - SOCIAL_AUTH_FACEBOOK_KEY=80708432326600631
       - SOCIAL_AUTH_FACEBOOK_SECRET=cd141ea5c62737hd723c246dce420b7e1113427
