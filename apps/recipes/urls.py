@@ -1,11 +1,15 @@
 
 from django.urls import path
-from .api import RecipeView, LikeRecipeView, CreateRecipeView
+from rest_framework.routers import DefaultRouter
+from . import api
 
 app_name = 'recipes'
 
+router = DefaultRouter()
+router.register('', api.RecipeView, basename="recipes")
+
 urlpatterns = [
-	path('<str:uuid>/', RecipeView.as_view(), name='detail-recipe'),
-	path('create', CreateRecipeView.as_view(), name='create-recipe'),
-	path('like', LikeRecipeView.as_view(), name='like-recipe'),
+	path('user/<str:uuid>',api.UserRecipesView.as_view(), name="user_recipes"),
 ]
+
+urlpatterns += router.urls
