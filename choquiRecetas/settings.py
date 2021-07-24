@@ -220,13 +220,13 @@ JAZZMIN_SETTINGS = {
     "copyright": "Waner Valencia",
     "user_avatar": "image_profile",
     "changeform_format": "collapsible",
-    "show_ui_builder": True,
+    #"show_ui_builder": True,
     "topmenu_links": [
         {"name": "Inicio",  "url": "admin:index", "permissions": ["auth.view_user"]},
         # external url that opens in a new window (Permissions can be added)
         {"name": "Soporte", "url": "https://github.com/WanerValencia2019", "new_window": True},
-        {"name": "Documentación", "url": "/admin/doc"},
         {"name": "API", "url": "/swagger"},
+        {"name": "Repositorio", "url": "https://github.com/WanerValencia2019/ChoquiRecetasBackend"},
     ],
     "usermenu_links": [
         {"name": "Soporte", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},

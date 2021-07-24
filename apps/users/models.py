@@ -41,6 +41,10 @@ class Follower(models.Model):
 	def __str__(self):
 		return f"{self.user} - {self.follower}"
 
+	class Meta:
+		verbose_name = "Seguidor"
+		verbose_name_plural = "Seguidores"
+		ordering = ['-created_at']
 
 class CodeVerification(models.Model):
 	user = models.OneToOneField(CustomModelUser, blank=False, null=False, on_delete=models.CASCADE)
@@ -50,8 +54,10 @@ class CodeVerification(models.Model):
 	used = models.BooleanField(default=False)
 	objects = CodeVerificationManager()
 	
-
-
+	class Meta:
+		verbose_name = "Código de verificación"
+		verbose_name_plural = "Códigos de verificación"
+		ordering = ['-created']
 
 	def __str__(self):
 		return f"{self.user} - {self.code}"

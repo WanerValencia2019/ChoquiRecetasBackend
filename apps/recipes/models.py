@@ -27,6 +27,10 @@ class Recipe(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 	def __str__(self):
 		return f"{self.title}"
+	class Meta:
+		verbose_name = "Receta"
+		verbose_name_plural = "Recetas"
+		ordering = ['-created_at']
 
 
 @receiver(pre_save,sender=Recipe)
@@ -42,6 +46,12 @@ class Comment(models.Model):
 
 	def __str__(self):
 		return f"{self.user.username} - {self.recipe.title}"
+
+	class Meta:
+		verbose_name = "Comentario"
+		verbose_name_plural = "Comentarios"
+		ordering = ['user__id']
+		
 
 class Step(models.Model):
 	recipe=models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Receta")
