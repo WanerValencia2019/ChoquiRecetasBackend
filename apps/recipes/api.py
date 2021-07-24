@@ -36,7 +36,7 @@ class RecipeView(ViewSet):
 	permission_classes=(IsAuthenticated,)
 	authentication_classes=(CsrfExemptSessionAuthentication, TokenAuthentication)
 	lookup_field = "uuid"
-	queryset = Recipe.objects.all().select_related('created_by').prefetch_related('likes','comments','steps')
+	queryset = Recipe.objects.all().select_related('created_by').prefetch_related('likes')
 
 	def get_queryset(self):
 		uuid = self.kwargs.get('uuid')
@@ -52,9 +52,8 @@ class RecipeView(ViewSet):
 			return None
 
 	def list(self, request, *args, **kwargs):
-		serialized = serializers.RecipeSerializer(self.queryset, many=True)
+		serialized = serializers.RecipeSerializer(self.queryset, many=True, context={"request":request})
 		data = serialized.data
-
 		return Response(data, status=status.HTTP_200_OK)
 
 	def create(self, request, *args, **kwargs):
@@ -64,14 +63,12 @@ class RecipeView(ViewSet):
 		return Response({"message":"Receta creada satisfactoriamente"}, status.HTTP_201_CREATED)
 
 	def retrieve(self, request,format=None, uuid=None):
-		print(uuid)
 		recipe = self.get_queryset()
 		if recipe is None:
 			return Response({"message":"Esta receta no existe"}, status.HTTP_400_BAD_REQUEST)
 		recipe_serialized = serializers.RecipeSerializer(instance=recipe, context={"request":request})
 		data={}
 		data = recipe_serialized.data
-		#print("Holaaa")
 		return Response(data, status.HTTP_200_OK)
 	
 	def update(self, request, *args, **kwargs):	
@@ -116,7 +113,7 @@ class UserRecipesView(ListAPIView):
 	serializer_class = serializers.RecipeSerializer
 
 	def get_queryset(self):
-		recipes = Recipe.objects.filter(created_by__uuid=self.kwargs.get('uuid')).select_related('created_by').prefetch_related('likes','comments','steps')
+		recipes = Recipe.objects.filter(created_by__uuid=self.kwargs.get('uuid')).select_related('created_by').prefetch_related('likes')
 		if len(recipes) != 0:
 			return recipes
 		return None
