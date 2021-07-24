@@ -1,5 +1,6 @@
 # ChoquiRecetasBackend
 API de recetas
+https://api-choquirecetas.herokuapp.com/
 
 
 ### Instalación
