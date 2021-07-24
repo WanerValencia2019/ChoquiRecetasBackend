@@ -1,6 +1,8 @@
 # ChoquiRecetasBackend
 API de recetas
-https://api-choquirecetas.herokuapp.com/
+https://api-choquirecetas.herokuapp.com/admin/
+Username: guess
+Password: guess
 
 
 ### Instalación
