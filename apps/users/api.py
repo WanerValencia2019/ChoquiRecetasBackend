@@ -197,6 +197,6 @@ class UserProfileView(APIView):
 
     def get(self,request):
         serializer=serializers.UserSerializer(request.user, context={"request":request})
-        token=Token.objects.get(user=request.user)
+        token=Token.objects.filter(user=request.user).first()
         user=serializer.data
-        return  Response({"user":user,"token":token.key},status.HTTP_200_OK)
+        return  Response({"user":user,"token":token.key if token is not None else None},status.HTTP_200_OK)
