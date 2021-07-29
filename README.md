@@ -2,6 +2,8 @@
 API de recetas
 https://api-choquirecetas.herokuapp.com/admin/
 
+## USER DEMO
+
 **Username: guess**
 
 **Password: guess**
